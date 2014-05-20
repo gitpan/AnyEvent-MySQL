@@ -33,6 +33,7 @@
       "runtime" : {
          "requires" : {
             "AnyEvent" : "0",
+            "Devel::StackTrace" : "0",
             "Digest::SHA1" : "0",
             "Guard" : "0",
             "Test::More" : "0"
@@ -40,5 +41,5 @@
       }
    },
    "release_status" : "stable",
-   "version" : "v1.0.1"
+   "version" : "v1.1.0"
 }

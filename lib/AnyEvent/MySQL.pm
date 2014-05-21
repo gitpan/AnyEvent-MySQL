@@ -10,12 +10,12 @@ AnyEvent::MySQL - Pure Perl AnyEvent socket implementation of MySQL client
 
 =head1 VERSION
 
-Version 1.1.0
+Version 1.1.1
 
 =cut
 
 use version;
-our $VERSION = qv 'v1.1.0';
+our $VERSION = qv 'v1.1.1';
 
 use AnyEvent::MySQL::Imp;
 
@@ -685,14 +685,14 @@ sub new {
     return $dbh;
 }
 
-=item $error_num = $dbh->err
+=head2 $error_num = $dbh->err
 
 =cut
 sub err {
     return $_[0]{_}[ERRi];
 }
 
-=item $error_str = $dbh->errstr
+=head2 $error_str = $dbh->errstr
 
 =cut
 sub errstr {

@@ -10,11 +10,11 @@ AnyEvent::MySQL - Pure Perl AnyEvent socket implementation of MySQL client
 
 =head1 VERSION
 
-Version 1.1.4
+Version 1.1.5
 
 =cut
 
-our $VERSION = '1.001004';
+our $VERSION = '1.001005';
 
 use AnyEvent::MySQL::Imp;
 
@@ -730,7 +730,7 @@ sub _do {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 
     if( $rev_dir ) {
         _unshift_task(@args);
@@ -787,12 +787,14 @@ sub selectall_arrayref {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
+
 
 =head2 $dbh->selectall_hashref($statement, [$key_field|\@key_field], [\%attr, [@bind_values,]] $cb->($hash_ref))
 
 =cut
+
 sub selectall_hashref {
     my $cb = ref($_[-1]) eq 'CODE' ? pop : \&AnyEvent::MySQL::_empty_cb;
     my($dbh, $statement, $key_field) = splice @_, 0, 3;
@@ -862,7 +864,7 @@ sub selectall_hashref {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->selectcol_arrayref($statement, [\%attr, [@bind_values,]] $cb->($ary_ref))
@@ -897,7 +899,7 @@ sub selectcol_arrayref {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->selectrow_array($statement, [\%attr, [@bind_values,]], $cb->(@row_ary))
@@ -926,7 +928,7 @@ sub selectrow_array {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->selectrow_arrayref($statement, [\%attr, [@bind_values,]], $cb->($ary_ref))
@@ -955,7 +957,7 @@ sub selectrow_arrayref {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->selectrow_hashref($statement, [\%attr, [@bind_values,]], $cb->($hash_ref))
@@ -993,7 +995,7 @@ sub selectrow_hashref {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $sth = $dbh->prepare($statement, [$cb->($sth)])
@@ -1044,7 +1046,7 @@ sub begin_work {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->commit([$cb->($rv)])
@@ -1076,7 +1078,7 @@ sub commit {
             };
             $next_act->();
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 =head2 $dbh->rollback([$cb->($rv)])
@@ -1093,7 +1095,7 @@ sub rollback {
             $dbh->{_}[TXN_STATEi] = NO_TXN if( $_[0] );
             &$cb;
         });
-    }, $cb]);
+    }, $cb, 0]);
 }
 sub _rollback {
     my($dbh, $next_act, $cb) = @_;
@@ -1116,6 +1118,31 @@ sub _rollback {
         };
         $next_act->();
     });
+}
+
+=head2 $dbh->ping(sub {my $alive = shift;});
+
+=cut
+
+sub ping {
+    my $cb = ref($_[-1]) eq 'CODE' ? pop : \&AnyEvent::MySQL::_empty_cb;
+    my ($dbh) = @_;
+
+    _push_task($dbh, [TXN_TASK, sub {
+        my $next_act = shift;
+        AnyEvent::MySQL::Imp::send_packet($dbh->{_}[HDi], 0, AnyEvent::MySQL::Imp::COM_PING);
+        AnyEvent::MySQL::Imp::recv_response($dbh->{_}[HDi], sub {
+            eval {
+                if ($_[0]==AnyEvent::MySQL::Imp::RES_OK) {
+                    $cb->(1);
+                }
+                else {
+                    $cb->(0);
+                }
+            };
+            $next_act->();
+        });
+    }, $cb, 0]);
 }
 
 package AnyEvent::MySQL::st;
@@ -1207,7 +1234,7 @@ sub execute {
                 }
             });
         }
-    }, $cb]);
+    }, $cb, 0]);
 }
 
 package AnyEvent::MySQL::ft;
@@ -1506,6 +1533,9 @@ by the Free Software Foundation; or the Artistic License.
 
 See http://dev.perl.org/licenses/ for more information.
 
+=head1 CONTRIBUTOR
+
+Dmitriy Shamatrin (justnoxx@github)
 
 =cut
 
